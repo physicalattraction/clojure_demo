@@ -20,7 +20,7 @@
 ;{:name chest, :size 10}
 ;nil
 
-(ns clojure-demo.core
+(ns clojure-demo.hobbit_smasher
   (:gen-class))
 
 (def asym-hobbit-body-parts [{:name "head" :size 3}
@@ -128,14 +128,3 @@
      (println (hit asym-hobbit-body-parts creature-symmetry))
      (if (< hit-counter, n)
        (recur (inc hit-counter))))))
-
-(defn -main
-  "I don't do a whole lot ... yet."
-  ([]
-   (-main 1))
-
-  ([n]
-   (println (hit-n-times (Integer. n))))
-
-  ([n creature-symmetry]
-   (println (hit-n-times (Integer. n) (Integer. creature-symmetry)))))
