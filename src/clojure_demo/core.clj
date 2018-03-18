@@ -1,13 +1,13 @@
 (ns clojure-demo.core
-  (:require [clojure-demo.hobbit_smasher :refer :all]))
+  (:require [clojure-demo.improved_hobbit_smasher :refer :all]))
 
 (defn -main
-  "I don't do a whole lot ... yet."
+  "Hit a creature"
   ([]
-   (-main 1))
+   (println (hit-n-times 1 asym-body-parts 2)))
 
-  ([n]
-   (println (hit-n-times (Integer. n))))
+  ([hit-final-count]
+   (println (hit-n-times (Integer. hit-final-count) asym-body-parts 2)))
 
-  ([n creature-symmetry]
-   (println (hit-n-times (Integer. n) (Integer. creature-symmetry)))))
+  ([hit-final-count creature-symmetry]
+   (println (hit-n-times (Integer. hit-final-count) asym-body-parts (Integer. creature-symmetry)))))
