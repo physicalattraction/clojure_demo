@@ -1,36 +1,22 @@
 # clojure_demo
 
-FIXME: description
+This demo accompanies the book Clojure for the Brave and True, downloadable at:
 
-## Installation
+    https://www.braveclojure.com/clojure-for-the-brave-and-true/
 
-Download from http://example.com/FIXME.
 
 ## Usage
 
-FIXME: explanation
+To run the main program, type in a terminal:
 
-    $ java -jar clojure_demo-0.1.0-standalone.jar [args]
+    $ lein run
 
-## Options
+To start an interactive REPL session, tpye in a terminal:
 
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+    # lein repl
 
 ## License
 
-Copyright © 2018 FIXME
+Copyright © 2018
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Eclipse Public License either version 1.0

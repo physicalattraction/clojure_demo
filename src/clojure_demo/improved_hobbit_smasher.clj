@@ -49,8 +49,8 @@
   [part creature-symmetry]
   (if (= creature-symmetry 2)
     [part
-      {:name (clojure.string/replace (:name part) #"^left-" "right-")
-       :size (:size part)}]
+     {:name (clojure.string/replace (:name part) #"^left-" "right-")
+      :size (:size part)}]
     (map
      #(hash-map :name (clojure.string/replace (:name part) #"^left-" (str (inc %) "-"))
        :size          (:size part))
