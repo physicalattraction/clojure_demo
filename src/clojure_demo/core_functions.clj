@@ -16,8 +16,9 @@
 
 (def my_map {:uncomfortable-thing "Winking" :comfortable-thing "Hugging"})
 
-;Create an anonymous function from another function
 (map #(titleize (second %)) my_map)
+
+;Create an anonymous function from another function
 
 ; Get the first element of the sequence
 (first my_vector)
@@ -121,3 +122,120 @@
    []
    input_seq))
 
+;take returns the first n elements of the sequence, whereas drop returns the sequence with the first n elements removed
+(take 3 [1 2 3 4 5 6 7 8 9 10])
+
+(drop 3 [1 2 3 4 5 6 7 8 9 10])
+
+;take-while and drop-while each take a predicate function (a function whose return value is evaluated for truth or
+;falsity) to determine when it should stop taking or dropping.
+(def ten [1 2 3 4 5 6 7 8 9 10])
+
+;Take all numbers smaller than 7, then drop all numbers smaller than 4
+(drop-while #(< % 4) (take-while #(< % 7) ten))
+
+;filter returns all elements of a sequence that test true for a predicate function
+(filter #(= (mod % 3) 0) ten)
+(filter #(= (rem % 3) 0) ten)
+
+;some returns the first truthy value (any value that’s not false or nil) returned by a predicate function
+(some #(= (mod % 3) 0) ten)
+(some #(= (mod % 11) 0) ten)
+
+;Here, a slightly different anonymous function uses and to first check whether the condition is true,
+;and then returns the entry when the condition is indeed true.
+(some #(and (= (mod % 3) 0) %) ten)
+
+;You can sort elements in ascending order with sort
+(sort [4 2 3 1])
+
+;You can sort by a given sort descriptor using sort-by
+(sort-by #(mod % 3) ten)
+
+;You can use this to reverse ordering
+(sort-by - ten)
+
+;concat appends the members of one sequence to the end of another
+(concat [1 2] [3 4])
+(concat ten (map #(+ % 10) ten))
+
+;Example of lazy evaluation
+(def vampire-database
+  {0 {:makes-blood-puns? false, :has-pulse? true :name "McFishwich"}
+   1 {:makes-blood-puns? false, :has-pulse? true :name "McMackson"}
+   2 {:makes-blood-puns? true, :has-pulse? false :name "Damon Salvatore"}
+   3 {:makes-blood-puns? true, :has-pulse? true :name "Mickey Mouse"}})
+
+(defn vampire-related-details
+  [social-security-number]
+  (Thread/sleep 1000)
+  (get vampire-database social-security-number))
+
+(defn vampire?
+  [record]
+  (and (:makes-blood-puns? record)
+       (not (:has-pulse? record))
+       record))
+
+(defn identify-vampire
+  [social-security-numbers]
+  (first
+   (filter vampire?
+           (map vampire-related-details social-security-numbers))))
+
+(time (vampire-related-details 0))
+(time (identify-vampire (range 0 1000000)))
+
+;repeat generates an infinite sequence with the given element
+;repeatedly generates an infinite sequence by applying the given function every time
+(concat (take 8 (repeat "na")) ["Batman!"])
+
+(take 3 (repeatedly (fn [] (rand-int 10))))
+(take 3 (repeatedly #(rand-int 10)))
+
+(defn even-numbers
+  ([] (even-numbers 0))
+  ([n] (cons n (lazy-seq (even-numbers (+ n 2))))))
+
+(take 10 (even-numbers))
+
+;This will create an infinite loop
+;(take-while #(= (mod % 2) 0) (even-numbers))
+
+(into {:favorite-emotion "gloomy"}
+      [[:sunlight-reaction "Glitter!"] [:favorite-color "blood red"]])
+
+;apply explodes a seqable data structure so it can be passed to a function that expects a rest parameter
+;similar to *args in Python
+(apply max [0 1 2])
+
+;partial = currying
+(def add10 (partial + 10))
+
+(add10 3 5)
+
+;This is how partial could be implemented
+(defn my-partial
+  [partialized-fn & args]
+  (fn [& more-args]
+    (apply partialized-fn (into args more-args))))
+
+(defn lousy-logger
+  [log-level message]
+  (condp = log-level
+    :warn      (clojure.string/lower-case message)
+    :emergency (clojure.string/upper-case message)))
+
+(def warn (partial lousy-logger :warn))
+(def error (partial lousy-logger :emergency))
+
+(defn identify-humans
+  [social-security-numbers]
+  (filter (complement vampire?)
+          (map vampire-related-details social-security-numbers)))
+
+;This is how complement could be implemented
+(defn my-complement
+  [fun]
+  (fn [& args]
+    (not (apply fun args))))

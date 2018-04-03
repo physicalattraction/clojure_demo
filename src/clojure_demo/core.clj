@@ -10,4 +10,5 @@
    (println (hit-n-times (Integer. hit-final-count) asym-body-parts 2)))
 
   ([hit-final-count creature-symmetry]
-   (println (hit-n-times (Integer. hit-final-count) asym-body-parts (Integer. creature-symmetry)))))
+   (println
+     (hit-n-times (Integer. hit-final-count) asym-body-parts (Integer. creature-symmetry)))))
