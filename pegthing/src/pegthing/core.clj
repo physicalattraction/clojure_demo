@@ -2,17 +2,18 @@
   (require [clojure.set :as set])
   (:gen-class))
 
-(declare successful-move prompt-move game-over prompt-rows)
+(declare user-entered-valid-move user-entered-invalid-move game-over)
 
 ;;;;
 ;; Create the board
 ;;;;
+
 (defn tri*
   "Generates lazy sequence of triangular numbers"
   ([] (tri* 0 1))
   ([sum n]
-     (let [new-sum (+ sum n)]
-       (cons new-sum (lazy-seq (tri* new-sum (inc n)))))))
+   (let [new-sum (+ sum n)]
+     (cons new-sum (lazy-seq (tri* new-sum (inc n)))))))
 
 (def tri (tri*))
 
@@ -41,14 +42,15 @@
   "Form a mutual connection between two positions"
   [board max-pos pos neighbor destination]
   (if (in-bounds? max-pos neighbor destination)
-    (reduce (fn [new-board [p1 p2]] (assoc-in new-board [p1 :connections p2] neighbor))
-            board
-            [[pos destination] [destination pos]])
+    (reduce
+      (fn [new-board [p1 p2]] (assoc-in new-board [p1 :connections p2] neighbor))
+      board
+      [[pos destination] [destination pos]])
     board))
 
 (defn connect-right
   [board max-pos pos]
-  (let [neighbor (inc pos)
+  (let [neighbor    (inc pos)
         destination (inc neighbor)]
     (if-not (or (triangular? neighbor) (triangular? pos))
       (connect board max-pos pos neighbor destination)
@@ -56,16 +58,16 @@
 
 (defn connect-down-left
   [board max-pos pos]
-  (let [row (row-num pos)
-        neighbor (+ row pos)
-        destination (+ 1 row neighbor)]
+  (let [row         (row-num pos)
+        neighbor    (+ row pos)
+        destination (+ row (inc row) pos)]
     (connect board max-pos pos neighbor destination)))
 
 (defn connect-down-right
   [board max-pos pos]
-  (let [row (row-num pos)
-        neighbor (+ 1 row pos)
-        destination (+ 2 row neighbor)]
+  (let [row         (row-num pos)
+        neighbor    (+ (inc row) pos)
+        destination (+ (inc row) (inc (inc row)) pos)]
     (connect board max-pos pos neighbor destination)))
 
 (defn add-pos
@@ -79,13 +81,16 @@
 (defn new-board
   [rows]
   (let [initial-board {:rows rows}
-        max-pos (row-tri rows)]
+        max-pos       (row-tri rows)]
     (reduce (fn [board pos] (add-pos board max-pos pos))
             initial-board
             (range 1 (inc max-pos)))))
+
+
 ;;;;
 ;; Move pegs
 ;;;;
+
 (defn pegged?
   "Does the position have a peg in it?"
   [board pos]
@@ -96,10 +101,12 @@
   destination and the value is the jumped position"
   [board pos]
   (into {}
-        (filter (fn [[destination jumped]]
-                  (and (not (pegged? board destination))
-                       (pegged? board jumped)))
-                (get-in board [pos :connections]))))
+        (filter
+          (fn [[destination jumped]]
+            (and (pegged? board pos)
+                 (not (pegged? board destination))
+                 (pegged? board jumped)))
+          (get-in board [pos :connections]))))
 
 (defn valid-move?
   "Return jumped position if the move from p1 to p2 is valid, nil
@@ -128,15 +135,18 @@
   (if-let [jumped (valid-move? board p1 p2)]
     (move-peg (remove-peg board jumped) p1 p2)))
 
+;Return a seq with all pegged positions: (map first (filter #(get (second %) :pegged) board))
 (defn can-move?
   "Do any of the pegged positions have valid moves?"
   [board]
   (some (comp not-empty (partial valid-moves board))
         (map first (filter #(get (second %) :pegged) board))))
 
+
 ;;;;
 ;; Represent board textually and print it
 ;;;;
+
 (def alpha-start 97)
 (def alpha-end 123)
 (def letters (map (comp str char) (range alpha-start alpha-end)))
@@ -187,9 +197,11 @@
   (doseq [row-num (range 1 (inc (:rows board)))]
     (println (render-row board row-num))))
 
+
 ;;;;
 ;; Interaction
 ;;;;
+
 (defn letter->pos
   "Converts a letter string to the corresponding position number"
   [letter]
@@ -199,10 +211,10 @@
   "Waits for user to enter text and hit enter, then cleans the input"
   ([] (get-input ""))
   ([default]
-     (let [input (clojure.string/trim (read-line))]
-       (if (empty? input)
-         default
-         (clojure.string/lower-case input)))))
+   (let [input (clojure.string/trim (read-line))]
+     (if (empty? input)
+       default
+       (clojure.string/lower-case input)))))
 
 (defn characters-as-strings
   "Given a string, return a collection consisting of each individual
@@ -217,16 +229,40 @@
   (println "Move from where to where? Enter two letters:")
   (let [input (map letter->pos (characters-as-strings (get-input)))]
     (if-let [new-board (make-move board (first input) (second input))]
-      (successful-move new-board)
-      (do
-        (println "\n!!! That was an invalid move :(\n")
-        (prompt-move board)))))
+      (user-entered-valid-move new-board)
+      (user-entered-invalid-move board))))
 
-(defn successful-move
+(defn prompt-empty-peg
+  [board]
+  (println "Here's your board:")
+  (print-board board)
+  (println "Remove which peg? [e]")
+  (prompt-move (remove-peg board (letter->pos (get-input "e")))))
+
+(defn max-rows
+  [letters]
+  (last (take-while #(<= (row-tri %) (count letters)) (rest (range)))))
+
+(defn prompt-rows
+  []
+  (println "How many rows? [5]")
+  (let [rows  (Integer. (get-input 5))
+        board (new-board rows)]
+    (if (> (row-tri rows) (count letters))
+      (do (println (str "Maximum number of rows = " (max-rows letters))) (prompt-rows))
+      (prompt-empty-peg board))))
+
+(defn user-entered-valid-move
   [board]
   (if (can-move? board)
     (prompt-move board)
     (game-over board)))
+
+(defn user-entered-invalid-move
+  "Handles the next step after a user has entered an invalid move"
+  [board]
+  (println "\n!!! That was an invalid move :(\n")
+  (prompt-move board))
 
 (defn game-over
   [board]
@@ -241,19 +277,6 @@
           (println "Bye!")
           (System/exit 0))))))
 
-(defn prompt-empty-peg
-  [board]
-  (println "Here's your board:")
-  (print-board board)
-  (println "Remove which peg? [e]")
-  (prompt-move (remove-peg board (letter->pos (get-input "e")))))
-
-(defn prompt-rows
-  []
-  (println "How many rows? [5]")
-  (let [rows (Integer. (get-input 5))
-        board (new-board rows)]
-    (prompt-empty-peg board)))
 
 (defn -main
   [& args]
